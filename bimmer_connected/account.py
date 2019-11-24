@@ -13,13 +13,13 @@ import logging
 import urllib
 import os
 import json
-from threading import Lock
+from threading import RLock
 from typing import Callable, List
 import requests
 
-from bimmer_connected.country_selector import Regions, get_server_url
+from bimmer_connected.country_selector import Regions, get_gcdm_oauth_endpoint
 from bimmer_connected.vehicle import ConnectedDriveVehicle
-from bimmer_connected.const import AUTH_URL, VEHICLES_URL, ERROR_CODE_MAPPING
+from bimmer_connected.const import AUTH_URL, PROFILE_URL, VEHICLES_URL, ERROR_CODE_MAPPING
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,29 +55,83 @@ class ConnectedDriveAccount:  # pylint: disable=too-many-instance-attributes
         self._retries_on_500_error = retries_on_500_error
         #: list of vehicles associated with this account.
         self._vehicles = []
-        self._lock = Lock()
+        self._lock = RLock()
         self._update_listeners = []
 
         self._get_vehicles()
 
     def _get_oauth_token(self) -> None:
-        """Get a new auth token from the server."""
+        """Get a new auth token from the server, based on user GCDM tokens"""
         with self._lock:
             if self._token_expiration is not None and datetime.datetime.now() < self._token_expiration:
                 _LOGGER.debug('Old token is still valid. Not getting a new one.')
                 return
 
             _LOGGER.debug('getting new oauth token')
+
+            # Get GCDM tokens with username/password
+            gcdm_tokens = self._get_gcdm_token()
+
+            # We need a session for cross-request cookies
+            oauth_session = requests.Session()
+
+            # Generate a state_token for OAuth (but don't sign in yet)
+            oauth_headers = {"ocp-apim-subscription-key": "01756ba1-e792-413b-81bd-91c4bd7807f5"}
+            oauth_state_request = oauth_session.get(
+                url=PROFILE_URL + "/api/Account/ExternalLogin",
+                headers=oauth_headers,
+                params={
+                    "provider": "GCDM",
+                    "response_type": "token",
+                    "redirect_uri": PROFILE_URL + "/",
+                    "client_id": "self",
+                },
+            )
+            state_token = urllib.parse.parse_qs(oauth_state_request.url).get("state")[0]
+
+            # With state_token, GCDM access_token and GCDM refresh_token, retrieve a authenticated session cookie
+            oauth_session.get(
+                url=PROFILE_URL + "/oauth_callback.html",
+                headers=oauth_headers,
+                params={
+                    "scope": "authenticate_user",
+                    "refresh": gcdm_tokens["refresh_token"],
+                    "state": state_token,
+                    "token": gcdm_tokens["access_token"],
+                },
+                allow_redirects=False,
+            )
+
+            # With the session cookie, call External Login again to get OAuth access_token, refresh_token and expiry
+            oauth_token_request = oauth_session.get(
+                url=PROFILE_URL + "/api/Account/ExternalLogin",
+                headers=oauth_headers,
+                params={
+                    "provider": "GCDM",
+                    "response_type": "token",
+                    "redirect_uri": PROFILE_URL + "/",
+                    "client_id": "self",
+                },
+            )
+            oauth_tokens = dict(urllib.parse.parse_qsl(urllib.parse.urlparse(oauth_token_request.url).fragment))
+
+            self._oauth_token = oauth_tokens['access_token']
+            # not sure how to use the refresh_token, but might be useful in the future...
+            self._refresh_token = oauth_tokens['refresh_token']
+            expiration_time = int(oauth_tokens['expires_in'])
+            self._token_expiration = datetime.datetime.now() + datetime.timedelta(seconds=expiration_time)
+            _LOGGER.debug('got new token %s with expiration date %s', self._oauth_token, self._token_expiration)
+
+    def _get_gcdm_token(self) -> dict:
+        """Get a new GCDM (Global Customer Data Management) token from the server."""
+        with self._lock:
+
+            _LOGGER.debug('getting new GCDM token')
             headers = {
                 "Content-Type": "application/x-www-form-urlencoded",
-                "Content-Length": "124",
-                "Connection": "Keep-Alive",
-                "Host": self.server_url,
-                "Accept-Encoding": "gzip",
                 "Authorization": "Basic blF2NkNxdHhKdVhXUDc0eGYzQ0p3VUVQOjF6REh4NnVuNGNEanli"
                                  "TEVOTjNreWZ1bVgya0VZaWdXUGNRcGR2RFJwSUJrN3JPSg==",
                 "Credentials": "nQv6CqtxJuXWP74xf3CJwUEP:1zDHx6un4cDjybLENN3kyfumX2kEYigWPcQpdvDRpIBk7rOJ",
-                "User-Agent": "okhttp/2.60",
             }
 
             # we really need all of these parameters
@@ -89,7 +143,7 @@ class ConnectedDriveAccount:  # pylint: disable=too-many-instance-attributes
             }
 
             data = urllib.parse.urlencode(values)
-            url = AUTH_URL.format(server=self.server_url)
+            url = AUTH_URL.format(gcdm_oauth_endpoint=get_gcdm_oauth_endpoint(self._region))
             try:
                 response = self.send_request(url, data=data, headers=headers, allow_redirects=False,
                                              expected_response=200, post=True)
@@ -99,13 +153,7 @@ class ConnectedDriveAccount:  # pylint: disable=too-many-instance-attributes
                 _LOGGER.exception(exception)
                 raise OSError(msg) from exception
 
-            response_json = response.json()
-            self._oauth_token = response_json['access_token']
-            # not sure how to use the refresh_token, but might be useful in the future...
-            self._refresh_token = response_json['refresh_token']
-            expiration_time = response_json['expires_in']
-            self._token_expiration = datetime.datetime.now() + datetime.timedelta(seconds=expiration_time)
-            _LOGGER.debug('got new token %s with expiration date %s', self._oauth_token, self._token_expiration)
+            return response.json()
 
     @property
     def request_header(self):
@@ -192,18 +240,11 @@ class ConnectedDriveAccount:  # pylint: disable=too-many-instance-attributes
 
         return json_data
 
-    @property
-    def server_url(self) -> str:
-        """Get the url of the server for this country."""
-        if self._server_url is None:
-            self._server_url = get_server_url(self._region)
-        return self._server_url
-
     def _get_vehicles(self):
         """Retrieve list of vehicle for the account."""
         _LOGGER.debug('Getting vehicle list')
         self._get_oauth_token()
-        response = self.send_request(VEHICLES_URL.format(server=self.server_url), headers=self.request_header,
+        response = self.send_request(VEHICLES_URL, headers=self.request_header,
                                      logfilename='vehicles')
 
         for vehicle_dict in response.json()['vehicles']:

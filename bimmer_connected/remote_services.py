@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 _POLLING_CYCLE = 1
 
 #: maximum number of seconds to wait for the server to return a positive answer
-_POLLING_TIMEOUT = 60
+_POLLING_TIMEOUT = 180
 
 #: time in seconds to wait before updating the vehicle state from the server
 _UPDATE_AFTER_REMOTE_SERVICE_DELAY = 10
@@ -128,7 +128,7 @@ class RemoteServices:
         You can choose if you want a POST or a GET operation.
         """
         data = {'serviceType': service_id.value}
-        url = REMOTE_SERVICE_URL.format(vin=self._vehicle.vin, server=self._account.server_url)
+        url = REMOTE_SERVICE_URL.format(vin=self._vehicle.vin)
 
         return self._account.send_request(url, post=post, data=data)
 
@@ -156,7 +156,6 @@ class RemoteServices:
         """
         _LOGGER.debug('getting remote service status')
         url = REMOTE_SERVICE_STATUS_URL.format(
-            server=self._account.server_url,
             vin=self._vehicle.vin,
             service_type=service.value)
         response = self._account.send_request(url)

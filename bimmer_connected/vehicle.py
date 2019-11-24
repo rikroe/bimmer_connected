@@ -197,7 +197,6 @@ class ConnectedDriveVehicle:
         """
         url = VEHICLE_IMAGE_URL.format(
             vin=self.vin,
-            server=self._account.server_url,
             width=width,
             height=height,
             view=direction.value,
@@ -235,7 +234,6 @@ class ConnectedDriveVehicle:
         """Send a point of interest to the vehicle."""
         url = VEHICLE_POI_URL.format(
             vin=self.vin,
-            server=self._account.server_url
         )
         header = self._account.request_header
         # the accept field of the header needs to be updated as we want a png not the usual JSON

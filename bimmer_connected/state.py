@@ -126,7 +126,7 @@ class VehicleState:  # pylint: disable=too-many-public-methods
             'dlon': self._vehicle.observer_longitude,
         }
         response = self._account.send_request(
-            VEHICLE_STATUS_URL.format(server=self._account.server_url, vin=self._vehicle.vin), logfilename='status',
+            VEHICLE_STATUS_URL.format(vin=self._vehicle.vin), logfilename='status',
             params=params)
         attributes = response.json()['vehicleStatus']
         self._attributes = attributes
