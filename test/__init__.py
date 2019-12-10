@@ -164,9 +164,10 @@ class BackendMock:
             self.add_response('https://.+/webapi/v1/user/vehicles/{vin}/status$'.format(vin=vin),
                               data_files=['{path}/status.json'.format(path=path)])
 
-    def Session(self) -> 'MockBackend': # pylint: disable=invalid-name
+    def Session(self) -> 'BackendMock':  # pylint: disable=invalid-name
         """Returns itself as a requests.Session style object"""
         return self
+
 
 class MockRequest:  # pylint: disable=too-few-public-methods
     """Stores the attributes of a request."""
