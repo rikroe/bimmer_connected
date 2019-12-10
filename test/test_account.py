@@ -18,7 +18,7 @@ class TestAccount(unittest.TestCase):
         with mock.patch('bimmer_connected.account.requests', new=backend_mock):
             account = ConnectedDriveAccount(TEST_USERNAME, TEST_PASSWORD, Regions.REST_OF_WORLD)
             self.assertIsNotNone(account._oauth_token)
-            self.assertEqual(6, len(account.vehicles))
+            self.assertEqual(8, len(account.vehicles))
             vehicle = account.get_vehicle(G31_VIN)
             self.assertEqual(G31_VIN, vehicle.vin)
 
@@ -32,13 +32,23 @@ class TestAccount(unittest.TestCase):
             with self.assertRaises(IOError):
                 account.send_request('invalid_url')
 
-    def test_us_header(self):
+    def test_us_url(self):
         """Test if the host is set correctly in the request."""
         backend_mock = BackendMock()
         with mock.patch('bimmer_connected.account.requests', new=backend_mock):
             ConnectedDriveAccount(TEST_USERNAME, TEST_PASSWORD, Regions.NORTH_AMERICA)
             request = [r for r in backend_mock.last_request if 'oauth' in r.url][0]
-            self.assertEqual('b2vapi.bmwgroup.us', request.headers['Host'])
+            self.assertEqual('https://customer.bmwgroup.com/gcdm/usa/oauth/token',
+                             request.url)
+
+    def test_china_url(self):
+        """Test if the host is set correctly in the request."""
+        backend_mock = BackendMock()
+        with mock.patch('bimmer_connected.account.requests', new=backend_mock):
+            ConnectedDriveAccount(TEST_USERNAME, TEST_PASSWORD, Regions.CHINA)
+            request = [r for r in backend_mock.last_request if 'oauth' in r.url][0]
+            self.assertEqual('https://customer.bmwgroup.com/gcdm/china/oauth/token',
+                             request.url)
 
     def test_anonymize_data(self):
         """Test anonymization function."""

@@ -39,6 +39,11 @@ _AUTH_RESPONSE_HEADERS = {
     'Date': 'Sun, 11 Mar 2018 08:16:13 GMT',
     'Content-Encoding': 'gzip'}
 
+_AUTH_RESPONSE_REDIRECT = (
+    "https://myc-profile.bmwgroup.com/#access_token=ACCESS_TOKEN"
+    "&token_type=bearer&expires_in=3480&refresh_token=REFRESH_TOKEN"
+    "&state=STATE_CODE")
+
 # VehicleState has different names than the json file. So we need to map some of the
 # parameters.
 ATTRIBUTE_MAPPING = {
@@ -114,9 +119,13 @@ class BackendMock:
         """Constructor."""
         self.last_request = []
         self.responses = [
-            MockResponse('https://.+/gcdm/oauth/token',
+            MockResponse('https://.+/gcdm/(.+/)?oauth/token',
                          headers=_AUTH_RESPONSE_HEADERS,
-                         data_files=['G31_NBTevo/auth_response.json'],
+                         data_files=['auth/auth_response.json'],
+                         status_code=200),
+            MockResponse('https://.+/api/Account/ExternalLogin',
+                         headers=_AUTH_RESPONSE_HEADERS,
+                         redirect_url=_AUTH_RESPONSE_REDIRECT,
                          status_code=200),
             MockResponse('https://.+/webapi/v1/user/vehicles$',
                          data_files=['vehicles.json']),
@@ -155,6 +164,9 @@ class BackendMock:
             self.add_response('https://.+/webapi/v1/user/vehicles/{vin}/status$'.format(vin=vin),
                               data_files=['{path}/status.json'.format(path=path)])
 
+    def Session(self) -> 'MockBackend': # pylint: disable=invalid-name
+        """Returns itself as a requests.Session style object"""
+        return self
 
 class MockRequest:  # pylint: disable=too-few-public-methods
     """Stores the attributes of a request."""
@@ -176,14 +188,18 @@ class MockResponse:
     # pylint: disable=too-many-arguments
 
     def __init__(self, regex: str, data: str = None, data_files: List[str] = None, headers: dict = None,
-                 status_code: int = 200) -> None:
+                 status_code: int = 200, redirect_url: str = None) -> None:
         """Constructor."""
         self.regex = re.compile(regex)
         self.status_code = status_code
+        self.url = redirect_url
         self.headers = headers
         self._usage_count = 0
         if self.headers is None:
             self.headers = dict()
+
+        if self.url is None:
+            self.url = regex.replace("https://.+", "")
 
         if data_files is not None:
             self._data = []
