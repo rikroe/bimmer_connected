@@ -11,6 +11,7 @@ from pathlib import Path
 
 import httpx
 
+from bimmer_connected import __version__
 from bimmer_connected.account import MyBMWAccount
 from bimmer_connected.api.regions import get_region_from_name, valid_regions
 from bimmer_connected.const import DEFAULT_POI_NAME
@@ -120,6 +121,9 @@ def main_parser() -> argparse.ArgumentParser:
         "-a", "--address", nargs="+", help="Address (e.g. 'Street 17, city, zip, country')"
     )
     sendpoi_from_address_parser.set_defaults(func=send_poi_from_address)
+
+    version_parser = subparsers.add_parser("version", description="Displays the current library version.")
+    version_parser.set_defaults(func=print_version)
 
     return parser
 
@@ -325,6 +329,11 @@ async def send_poi_from_address(args) -> None:
         "country": address.get("country"),
     }
     await vehicle.remote_services.trigger_send_poi(poi_data)
+
+
+async def print_version(args) -> None:
+    """Print the current library version."""
+    print(f"bimmer_connected version: {__version__}")
 
 
 def _add_default_arguments(parser: argparse.ArgumentParser):
