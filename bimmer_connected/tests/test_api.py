@@ -63,10 +63,9 @@ def test_anonymize_data():
     assert "more_public_data" in anon_text
 
 
-@pytest.mark.asyncio
-async def test_storing_fingerprints(tmp_path, bmw_fixture: respx.Router, bmw_log_all_responses):
+@pytest.mark.usefixtures("bmw_log_all_responses")
+async def test_storing_fingerprints(tmp_path, bmw_fixture: respx.Router):
     """Test storing fingerprints to file."""
-
     # We need to remove the existing state route first and add it back later as otherwise our error call is never
     # matched (respx matches by order of routes and we don't replace the existing one)
     state_route = bmw_fixture.routes.pop("state")
@@ -95,8 +94,7 @@ async def test_storing_fingerprints(tmp_path, bmw_fixture: respx.Router, bmw_log
     assert len(txt_files) == 1  # state with error 500
 
 
-@pytest.mark.asyncio
-async def test_fingerprint_deque(monkeypatch: pytest.MonkeyPatch, bmw_fixture: respx.Router):
+async def test_fingerprint_deque(bmw_fixture: respx.Router):
     """Test storing fingerprints to file."""
     # Prepare Number of good responses
 
@@ -124,7 +122,6 @@ async def test_fingerprint_deque(monkeypatch: pytest.MonkeyPatch, bmw_fixture: r
 
 def test_get_retry_wait_time():
     """Test extraction of retry wait time."""
-
     # Parsing correctly
     r = httpx.Response(429, json={"statusCode": 429, "message": "Rate limit is exceeded. Try again in 1 seconds."})
     assert get_retry_wait_time(r) == 2

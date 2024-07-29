@@ -88,7 +88,6 @@ async def handle_httpstatuserror(
 
 def anonymize_data(json_data: Union[List, Dict]) -> Union[List, Dict]:
     """Replace parts of the logfiles containing personal information."""
-
     replacements = {
         "lat": 12.3456,
         "latitude": 12.3456,
@@ -202,8 +201,8 @@ def get_capture_position(base64_background_img: str) -> str:
     position = ""
     found_block = False
 
-    for y in range(0, img.height - block["height"]):
-        for x in range(0, img.width - block["width"]):
+    for y in range(img.height - block["height"]):
+        for x in range(img.width - block["width"]):
             found_block = True
             for i in range(block["height"]):
                 for j in range(block["width"]):
@@ -233,7 +232,6 @@ def try_import_pillow_image():
     We only need to load PIL if we are in China, so we try to avoid a general dependency
     on Pillow for all users. Installing Pillow on Raspberry Pi (ARMv7) is painful.
     """
-
     try:
         image = importlib.import_module("PIL.Image")
     except ImportError as ex:

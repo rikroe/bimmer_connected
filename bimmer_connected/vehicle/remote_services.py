@@ -100,6 +100,7 @@ class RemoteServices:
     """Trigger remote services on a vehicle."""
 
     def __init__(self, vehicle: "MyBMWVehicle"):
+        """Create a new RemoteServices handler."""
         self._account = vehicle.account
         self._vehicle = vehicle
 
@@ -107,7 +108,6 @@ class RemoteServices:
         self, service_id: Services, params: Optional[Dict] = None, data: Any = None, refresh: bool = False
     ) -> RemoteServiceStatus:
         """Trigger a remote service and wait for the result."""
-
         # Check if service requires a specific url and add all required parameters
         url = SERVICE_URLS.get(service_id, REMOTE_SERVICE_URL)
 
@@ -143,11 +143,9 @@ class RemoteServices:
 
     async def _get_remote_service_status(self, client: MyBMWClient, event_id: str) -> RemoteServiceStatus:
         """Return execution status of the last remote service that was triggered."""
-
         _LOGGER.debug("getting remote service status for '%s'", event_id)
         url = REMOTE_SERVICE_STATUS_URL.format(vin=self._vehicle.vin, event_id=event_id)
-        async with MyBMWClient(self._account.config, brand=self._vehicle.brand) as client:
-            response = await client.post(url)
+        response = await client.post(url)
         return RemoteServiceStatus(response.json(), event_id=event_id)
 
     async def _block_until_done(self, client: MyBMWClient, event_id: str) -> RemoteServiceStatus:
@@ -155,7 +153,6 @@ class RemoteServices:
 
         :raises TimeoutError: if there is no final answer before _POLLING_TIMEOUT
         """
-
         fail_after = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=_POLLING_TIMEOUT)
         while datetime.datetime.now(datetime.timezone.utc) < fail_after:
             await asyncio.sleep(_POLLING_CYCLE)
@@ -241,7 +238,6 @@ class RemoteServices:
         self, target_soc: Optional[int] = None, ac_limit: Optional[int] = None
     ) -> RemoteServiceStatus:
         """Update the charging settings on the vehicle."""
-
         if target_soc and not self._vehicle.is_remote_set_target_soc_enabled:
             raise ValueError("Vehicle does not support setting target SoC.")
         if target_soc and (
@@ -268,7 +264,6 @@ class RemoteServices:
         self, charging_mode: Optional[ChargingMode] = None, precondition_climate: Optional[bool] = None
     ) -> RemoteServiceStatus:
         """Update the charging profile on the vehicle."""
-
         if not self._vehicle.is_charging_plan_supported or not self._vehicle.charging_profile:
             raise ValueError("Vehicle does not support setting charging profile.")
 

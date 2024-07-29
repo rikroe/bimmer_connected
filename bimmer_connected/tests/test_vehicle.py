@@ -41,8 +41,7 @@ ATTRIBUTE_MAPPING = {
 }
 
 
-@pytest.mark.asyncio
-async def test_drive_train(caplog, bmw_fixture: respx.Router):
+async def test_drive_train(caplog: pytest.LogCaptureFixture):
     """Tests around drive_train attribute."""
     account = await prepare_account_with_vehicles()
     vehicle = account.get_vehicle(VIN_F31)
@@ -63,13 +62,11 @@ async def test_drive_train(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_parsing_attributes(caplog, bmw_fixture: respx.Router):
+async def test_parsing_attributes(caplog: pytest.LogCaptureFixture):
     """Test parsing different attributes of the vehicle."""
     account = await prepare_account_with_vehicles()
 
     for vehicle in account.vehicles:
-        print(vehicle.name)
         assert vehicle.drive_train is not None
         assert vehicle.name is not None
         assert isinstance(vehicle.brand, CarBrands)
@@ -81,8 +78,7 @@ async def test_parsing_attributes(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_drive_train_attributes(caplog, bmw_fixture: respx.Router):
+async def test_drive_train_attributes(caplog: pytest.LogCaptureFixture):
     """Test parsing different attributes of the vehicle."""
     account = await prepare_account_with_vehicles()
 
@@ -105,8 +101,7 @@ async def test_drive_train_attributes(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_parsing_of_lsc_type(caplog, bmw_fixture: respx.Router):
+async def test_parsing_of_lsc_type(caplog: pytest.LogCaptureFixture):
     """Test parsing the lsc type field."""
     account = await prepare_account_with_vehicles()
 
@@ -116,7 +111,7 @@ async def test_parsing_of_lsc_type(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-def test_car_brand(caplog, bmw_fixture: respx.Router):
+def test_car_brand(caplog: pytest.LogCaptureFixture):
     """Test CarBrand enum."""
     assert CarBrands("BMW") == CarBrands("bmw")
 
@@ -126,8 +121,7 @@ def test_car_brand(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_get_is_tracking_enabled(caplog, bmw_fixture: respx.Router):
+async def test_get_is_tracking_enabled(caplog: pytest.LogCaptureFixture):
     """Test setting observer position."""
     account = await prepare_account_with_vehicles()
     vehicle = account.get_vehicle(VIN_I01_REX)
@@ -139,8 +133,7 @@ async def test_get_is_tracking_enabled(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_available_attributes(caplog, bmw_fixture: respx.Router):
+async def test_available_attributes(caplog: pytest.LogCaptureFixture):
     """Check that available_attributes returns exactly the arguments we have in our test data."""
     account = await prepare_account_with_vehicles()
 
@@ -209,8 +202,7 @@ async def test_available_attributes(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_vehicle_image(caplog, bmw_fixture: respx.Router):
+async def test_vehicle_image(caplog: pytest.LogCaptureFixture, bmw_fixture: respx.Router):
     """Test vehicle image request."""
     vehicle = (await prepare_account_with_vehicles()).get_vehicle(VIN_G01)
 
@@ -224,7 +216,6 @@ async def test_vehicle_image(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
 async def test_no_timestamp(bmw_fixture: respx.Router):
     """Test no timestamp available."""
     vehicle = (await prepare_account_with_vehicles()).get_vehicle(VIN_F31)
@@ -234,7 +225,7 @@ async def test_no_timestamp(bmw_fixture: respx.Router):
     assert vehicle.timestamp is None
 
 
-def test_strenum(caplog):
+def test_strenum(caplog: pytest.LogCaptureFixture):
     """Tests StrEnum."""
 
     class TestEnum(StrEnum):
@@ -285,10 +276,8 @@ def test_gpsposition():
     assert pos[0] == 1
 
 
-@pytest.mark.asyncio
-async def test_headunit_data(caplog, bmw_fixture: respx.Router):
+async def test_headunit_data(caplog: pytest.LogCaptureFixture):
     """Test if the parsing of headunit is working."""
-
     status = (await prepare_account_with_vehicles()).get_vehicle(VIN_I20).headunit
 
     assert status.idrive_version == "ID8"

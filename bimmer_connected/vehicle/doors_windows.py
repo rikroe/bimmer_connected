@@ -40,7 +40,7 @@ class Lid:
     """
 
     def __init__(self, name: str, state: str):
-        #: name of the lid
+        """Initialize the lid (door, trunk or hatch)."""
         self.name = name
         self.state = LidState(state)
 

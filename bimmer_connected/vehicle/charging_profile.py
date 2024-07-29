@@ -54,6 +54,7 @@ class ChargingWindow:
     """A charging window."""
 
     def __init__(self, window_dict: dict):
+        """Initialize the charging window."""
         self._window_dict = window_dict
 
     @property
@@ -75,6 +76,7 @@ class DepartureTimer:
     """A departure timer."""
 
     def __init__(self, timer_dict: dict):
+        """Initialize the departure timer."""
         self._timer_dict: Dict = timer_dict
 
     @property
@@ -157,7 +159,6 @@ class ChargingProfile(VehicleDataBase):
 
     def format_for_remote_service(self) -> dict:
         """Format current charging profile as base to be sent to remote service."""
-
         return {
             "chargingMode": {
                 "chargingPreference": self.charging_preferences.value,

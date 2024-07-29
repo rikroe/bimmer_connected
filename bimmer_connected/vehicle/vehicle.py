@@ -164,7 +164,7 @@ class MyBMWVehicle:
                 else:
                     curr_attr: VehicleDataBase = getattr(self, vehicle_attribute)
                     curr_attr.update_from_vehicle_data(vehicle_data)
-            except (KeyError, TypeError) as ex:
+            except (KeyError, TypeError) as ex:  # noqa: PERF203
                 _LOGGER.warning("Unable to update %s - (%s) %s", vehicle_attribute, type(ex).__name__, ex)
 
     def combine_data(self, data: Union[Dict, List[Dict]], fetched_at: Optional[datetime.datetime] = None) -> Dict:

@@ -82,7 +82,6 @@ class MyBMWMockRouter(respx.MockRouter):
 
     def add_login_routes(self) -> None:
         """Add routes for login."""
-
         # Login to north_america and rest_of_world
         self.get("/eadrax-ucs/v1/presentation/oauth/config").respond(
             200, json=load_response(RESPONSE_DIR / "auth" / "oauth_config.json")
@@ -113,7 +112,6 @@ class MyBMWMockRouter(respx.MockRouter):
 
     def add_vehicle_routes(self) -> None:
         """Add routes for vehicle requests."""
-
         self.post("/eadrax-vcs/v5/vehicle-list", name="vehicles").mock(side_effect=self.vehicles_sideeffect)
         self.get("/eadrax-vcs/v5/vehicle-data/profile").mock(side_effect=self.vehicle_profile_sideeffect)
         self.get("/eadrax-vcs/v4/vehicles/state", name="state").mock(side_effect=self.vehicle_state_sideeffect)
@@ -121,7 +119,6 @@ class MyBMWMockRouter(respx.MockRouter):
 
     def add_remote_service_routes(self) -> None:
         """Add routes for remote services."""
-
         self.post(path__regex=r"/eadrax-vrccs/v4/presentation/remote-commands/(?!event.*)(?P<service>.+)$").mock(
             side_effect=self.service_trigger_sideeffect
         )
@@ -227,7 +224,6 @@ class MyBMWMockRouter(respx.MockRouter):
         self, request: httpx.Request, vin: Optional[str] = None, service: Optional[str] = None
     ) -> httpx.Response:
         """Return specific eventId for each remote function."""
-
         vin = vin or request.headers["bmw-vin"]
 
         if service in ["door-lock", "door-unlock"]:
@@ -270,7 +266,6 @@ class MyBMWMockRouter(respx.MockRouter):
 
     def charging_profile_sideeffect(self, request: httpx.Request, vin: str) -> httpx.Response:
         """Check if payload is a valid charging settings payload and return evendId."""
-
         data = json.loads(request.content)
 
         if {"chargingMode", "departureTimer", "isPreconditionForDepartureActive", "servicePack"} != set(data):
@@ -320,7 +315,6 @@ class MyBMWMockRouter(respx.MockRouter):
     @staticmethod
     def poi_sideeffect(request: httpx.Request, gcid: str) -> httpx.Response:
         """Check if payload is a valid POI."""
-
         assert gcid == "DUMMY"
 
         data = json.loads(request.content)

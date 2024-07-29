@@ -33,9 +33,8 @@ from .conftest import prepare_account_with_vehicles
 UTC = datetime.timezone.utc
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("bmw_fixture", [[VIN_G26]], indirect=True)
-async def test_generic(caplog, bmw_fixture: respx.Router):
+async def test_generic(caplog: pytest.LogCaptureFixture):
     """Test generic attributes."""
     status = (await prepare_account_with_vehicles()).get_vehicle(VIN_G26)
 
@@ -48,8 +47,7 @@ async def test_generic(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_generic_error_handling(caplog, bmw_fixture: respx.Router):
+async def test_generic_error_handling(caplog: pytest.LogCaptureFixture):
     """Test error handling when vehicle is set up."""
     account = await prepare_account_with_vehicles()
 
@@ -69,7 +67,6 @@ async def test_generic_error_handling(caplog, bmw_fixture: respx.Router):
     caplog.clear()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("vin"),
     [
@@ -77,7 +74,7 @@ async def test_generic_error_handling(caplog, bmw_fixture: respx.Router):
         (VIN_J29),
     ],
 )
-async def test_range_combustion_no_info(caplog, bmw_fixture: respx.Router, vin: str):
+async def test_range_combustion_no_info(caplog: pytest.LogCaptureFixture, bmw_fixture: respx.Router, vin: str):
     """Test if the parsing of very old vehicles."""
     vehicle = (await prepare_account_with_vehicles()).get_vehicle(vin)
     status = vehicle.fuel_and_battery
@@ -94,8 +91,7 @@ async def test_range_combustion_no_info(caplog, bmw_fixture: respx.Router, vin: 
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_range_combustion(caplog, bmw_fixture: respx.Router):
+async def test_range_combustion(caplog: pytest.LogCaptureFixture):
     """Test if the parsing of mileage and range is working."""
     vehicle = (await prepare_account_with_vehicles()).get_vehicle(VIN_G20)
     status = vehicle.fuel_and_battery
@@ -116,8 +112,7 @@ async def test_range_combustion(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_range_phev(caplog, bmw_fixture: respx.Router):
+async def test_range_phev(caplog: pytest.LogCaptureFixture):
     """Test if the parsing of mileage and range is working."""
     status = (await prepare_account_with_vehicles()).get_vehicle(VIN_G01).fuel_and_battery
 
@@ -135,8 +130,7 @@ async def test_range_phev(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_range_rex(caplog, bmw_fixture: respx.Router):
+async def test_range_rex(caplog: pytest.LogCaptureFixture):
     """Test if the parsing of mileage and range is working."""
     status = (await prepare_account_with_vehicles()).get_vehicle(VIN_I01_REX).fuel_and_battery
 
@@ -154,8 +148,7 @@ async def test_range_rex(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_range_electric(caplog, bmw_fixture: respx.Router):
+async def test_range_electric(caplog: pytest.LogCaptureFixture):
     """Test if the parsing of mileage and range is working."""
     status = (await prepare_account_with_vehicles()).get_vehicle(VIN_I20).fuel_and_battery
 
@@ -172,8 +165,7 @@ async def test_range_electric(caplog, bmw_fixture: respx.Router):
 
 
 @time_machine.travel("2021-11-28 21:28:59 +0000", tick=False)
-@pytest.mark.asyncio
-async def test_charging_end_time(caplog, bmw_fixture: respx.Router):
+async def test_charging_end_time(caplog: pytest.LogCaptureFixture):
     """Test charging end time."""
     account = await prepare_account_with_vehicles()
     vehicle = account.get_vehicle(VIN_I01_NOREX)
@@ -187,10 +179,8 @@ async def test_charging_end_time(caplog, bmw_fixture: respx.Router):
 
 
 @time_machine.travel("2021-11-28 17:28:59 +0000", tick=False)
-@pytest.mark.asyncio
-async def test_plugged_in_waiting_for_charge_window(caplog, bmw_fixture: respx.Router):
+async def test_plugged_in_waiting_for_charge_window(caplog: pytest.LogCaptureFixture):
     """I01_REX is plugged in but not charging, as its waiting for charging window."""
-
     # Make sure that local timezone for test is UTC
     os.environ["TZ"] = "Europe/Berlin"
     time.tzset()
@@ -207,8 +197,7 @@ async def test_plugged_in_waiting_for_charge_window(caplog, bmw_fixture: respx.R
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_condition_based_services(caplog, bmw_fixture: respx.Router):
+async def test_condition_based_services(caplog: pytest.LogCaptureFixture):
     """Test condition based service messages."""
     vehicle = (await prepare_account_with_vehicles()).get_vehicle(VIN_G26)
 
@@ -234,8 +223,7 @@ async def test_condition_based_services(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_position_generic(caplog, bmw_fixture: respx.Router):
+async def test_position_generic(caplog: pytest.LogCaptureFixture):
     """Test generic attributes."""
     status = (await prepare_account_with_vehicles()).get_vehicle(VIN_G26)
 
@@ -249,8 +237,7 @@ async def test_position_generic(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_vehicle_active(caplog, bmw_fixture: respx.Router):
+async def test_vehicle_active(caplog: pytest.LogCaptureFixture):
     """Test that vehicle_active is always False."""
     account = await prepare_account_with_vehicles()
 
@@ -260,8 +247,7 @@ async def test_vehicle_active(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_parse_f31_no_position(caplog, bmw_fixture: respx.Router):
+async def test_parse_f31_no_position(caplog: pytest.LogCaptureFixture):
     """Test parsing of F31 data with position tracking disabled in the vehicle."""
     vehicle = (await prepare_account_with_vehicles()).get_vehicle(VIN_F31)
 
@@ -271,8 +257,7 @@ async def test_parse_f31_no_position(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_parse_gcj02_position(caplog, bmw_fixture: respx.Router):
+async def test_parse_gcj02_position(caplog: pytest.LogCaptureFixture):
     """Test conversion of GCJ02 to WGS84 for china."""
     account = await prepare_account_with_vehicles(get_region_from_name("china"))
     vehicle = account.get_vehicle(VIN_G01)
@@ -301,8 +286,7 @@ async def test_parse_gcj02_position(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_lids(caplog, bmw_fixture: respx.Router):
+async def test_lids(caplog: pytest.LogCaptureFixture):
     """Test features around lids."""
     # status = (await prepare_account_with_vehicles()).get_vehicle(VIN_G01).doors_and_windows
 
@@ -329,8 +313,7 @@ async def test_lids(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_windows_g01(caplog, bmw_fixture: respx.Router):
+async def test_windows_g01(caplog: pytest.LogCaptureFixture):
     """Test features around windows."""
     status = (await prepare_account_with_vehicles()).get_vehicle(VIN_G01).doors_and_windows
 
@@ -344,8 +327,7 @@ async def test_windows_g01(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_door_locks(caplog, bmw_fixture: respx.Router):
+async def test_door_locks(caplog: pytest.LogCaptureFixture):
     """Test the door locks."""
     status = (await prepare_account_with_vehicles()).get_vehicle(VIN_G01).doors_and_windows
 
@@ -358,8 +340,7 @@ async def test_door_locks(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_check_control_messages(caplog, bmw_fixture: respx.Router):
+async def test_check_control_messages(caplog: pytest.LogCaptureFixture):
     """Test handling of check control messages.
 
     F11 is the only vehicle with active Check Control Messages, so we only expect to get something there.
@@ -388,10 +369,8 @@ async def test_check_control_messages(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_charging_profile(caplog, bmw_fixture: respx.Router):
+async def test_charging_profile(caplog: pytest.LogCaptureFixture):
     """Test parsing of the charging profile."""
-
     charging_profile = (await prepare_account_with_vehicles()).get_vehicle(VIN_I01_REX).charging_profile
     assert charging_profile.is_pre_entry_climatization_enabled is False
 
@@ -416,8 +395,7 @@ async def test_charging_profile(caplog, bmw_fixture: respx.Router):
     assert len(get_deprecation_warning_count(caplog)) == 0
 
 
-@pytest.mark.asyncio
-async def test_charging_profile_format_for_remote_service(caplog, bmw_fixture: respx.Router):
+async def test_charging_profile_format_for_remote_service(caplog: pytest.LogCaptureFixture):
     """Test formatting of the charging profile."""
     account = await prepare_account_with_vehicles()
 
@@ -439,8 +417,7 @@ async def test_charging_profile_format_for_remote_service(caplog, bmw_fixture: r
         assert vehicle.charging_profile.format_for_remote_service() == fixture_data
 
 
-@pytest.mark.asyncio
-async def test_tires(bmw_fixture: respx.Router):
+async def test_tires():
     """Test tire status."""
     account = await prepare_account_with_vehicles()
 
@@ -470,8 +447,7 @@ async def test_tires(bmw_fixture: respx.Router):
 
 
 @time_machine.travel("2021-11-28 21:28:59 +0000", tick=False)
-@pytest.mark.asyncio
-async def test_climate(bmw_fixture: respx.Router):
+async def test_climate():
     """Test climate status."""
     account = await prepare_account_with_vehicles()
 

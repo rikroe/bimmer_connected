@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Union
 
+import pytest
+
 from bimmer_connected.api.regions import Regions
 from bimmer_connected.const import CarBrands
 
@@ -39,7 +41,6 @@ REMOTE_SERVICE_RESPONSE_EVENTPOSITION = RESPONSE_DIR / "remote_services" / "eadr
 
 def get_fingerprint_count(type: str) -> int:
     """Return number of requests/fingerprints for a given type."""
-
     if type == "vehicles":
         return len(CarBrands)
     if type == "states":
@@ -78,6 +79,6 @@ for charging_setting in RESPONSE_DIR.rglob("*-eadrax-crccs_v2_vehicles_*.json"):
     ALL_CHARGING_SETTINGS[charging_setting.stem.split("_")[-1]] = load_response(charging_setting)
 
 
-def get_deprecation_warning_count(caplog):
+def get_deprecation_warning_count(caplog: pytest.LogCaptureFixture):
     """Return all logged DeprecationWarnings."""
     return [r for r in caplog.records if r.levelname == "WARNING" and "DeprecationWarning" in r.message]

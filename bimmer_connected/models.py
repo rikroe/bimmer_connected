@@ -49,7 +49,7 @@ class VehicleDataBase:
     @classmethod
     def _parse_vehicle_data(cls, vehicle_data: Dict) -> Optional[Dict]:
         """Parse desired attributes out of vehicle data from API."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def _update_after_parse(self, parsed: Dict) -> Dict:
         """Update parsed vehicle data with attributes stored in class if needed."""

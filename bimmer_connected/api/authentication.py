@@ -184,11 +184,9 @@ class MyBMWAuthentication(httpx.Auth):
                 authenticate_url,
                 data=dict(
                     oauth_base_values,
-                    **{
-                        "grant_type": "authorization_code",
-                        "username": self.username,
-                        "password": self.password,
-                    },
+                    grant_type="authorization_code",
+                    username=self.username,
+                    password=self.password,
                 ),
             )
             authorization = httpx.URL(response.json()["redirect_to"]).params["authorization"]
@@ -202,7 +200,7 @@ class MyBMWAuthentication(httpx.Auth):
                         brand="bmw", app_version=get_app_version(self.region), region=self.region.value
                     ),
                 },
-                data=dict(oauth_base_values, **{"authorization": authorization}),
+                data=dict(oauth_base_values, authorization=authorization),
             )
             code = response.next_request.url.params["code"]
 
@@ -427,7 +425,6 @@ def get_retry_wait_time(response: httpx.Response) -> int:
     """Get the wait time for the next retry from the response and multiply by 2."""
     try:
         response_wait_time = next(iter([int(i) for i in response.json().get("message", "") if i.isdigit()]))
-    except Exception:
+    except Exception:  # noqa: BLE001
         response_wait_time = 2
-    wait_time = math.ceil(response_wait_time * 2)
-    return wait_time
+    return math.ceil(response_wait_time * 2)

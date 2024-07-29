@@ -1,3 +1,5 @@
+"""Tests for the CLI module."""
+
 import contextlib
 import json
 import subprocess
@@ -9,7 +11,7 @@ import pytest
 import respx
 
 import bimmer_connected.cli
-from bimmer_connected import __version__ as VERSION
+from bimmer_connected import __version__
 
 from . import RESPONSE_DIR, get_fingerprint_count, load_response
 
@@ -19,23 +21,24 @@ FIXTURE_CLI_HELP = "Connect to MyBMW/MINI API and interact with your vehicle."
 
 def test_run_entrypoint():
     """Test if the entrypoint is installed correctly."""
-    result = subprocess.run(["bimmerconnected", "--help"], capture_output=True, text=True)
+    result = subprocess.run(["bimmerconnected", "--help"], capture_output=True, text=True, check=False)
 
     assert FIXTURE_CLI_HELP in result.stdout
-    assert VERSION in result.stdout
+    assert __version__ in result.stdout
     assert result.returncode == 0
 
 
 def test_run_module():
     """Test if the module can be run as a python module."""
-    result = subprocess.run(["python", "-m", "bimmer_connected.cli", "--help"], capture_output=True, text=True)
+    result = subprocess.run(
+        ["python", "-m", "bimmer_connected.cli", "--help"], capture_output=True, text=True, check=False
+    )
 
     assert FIXTURE_CLI_HELP in result.stdout
-    assert VERSION in result.stdout
+    assert __version__ in result.stdout
     assert result.returncode == 0
 
 
-@pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.usefixtures("cli_home_dir")
 @pytest.mark.parametrize(
     ("vin", "expected_count"),
@@ -47,7 +50,6 @@ def test_run_module():
 )
 def test_status_json_filtered(capsys: pytest.CaptureFixture, vin, expected_count):
     """Test the status command JSON output filtered by VIN."""
-
     sys.argv = ["bimmerconnected", "status", "-j", "-v", vin, *ARGS_USER_PW_REGION]
     with contextlib.suppress(SystemExit):
         bimmer_connected.cli.main()
@@ -61,11 +63,9 @@ def test_status_json_filtered(capsys: pytest.CaptureFixture, vin, expected_count
         assert "Error: Could not find vehicle" in result.err
 
 
-@pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.usefixtures("cli_home_dir")
 def test_status_json_unfiltered(capsys: pytest.CaptureFixture):
     """Test the status command JSON output filtered by VIN."""
-
     sys.argv = ["bimmerconnected", "status", "-j", *ARGS_USER_PW_REGION]
     bimmer_connected.cli.main()
     result = capsys.readouterr()
@@ -75,7 +75,6 @@ def test_status_json_unfiltered(capsys: pytest.CaptureFixture):
     assert len(result_json) == get_fingerprint_count("states")
 
 
-@pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.usefixtures("cli_home_dir")
 @pytest.mark.parametrize(
     ("vin", "expected_count"),
@@ -87,7 +86,6 @@ def test_status_json_unfiltered(capsys: pytest.CaptureFixture):
 )
 def test_status_filtered(capsys: pytest.CaptureFixture, vin, expected_count):
     """Test the status command text output filtered by VIN."""
-
     sys.argv = ["bimmerconnected", "status", "-v", vin, *ARGS_USER_PW_REGION]
     with contextlib.suppress(SystemExit):
         bimmer_connected.cli.main()
@@ -102,11 +100,9 @@ def test_status_filtered(capsys: pytest.CaptureFixture, vin, expected_count):
         assert result.out.count("VIN: ") == expected_count
 
 
-@pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.usefixtures("cli_home_dir")
 def test_status_unfiltered(capsys: pytest.CaptureFixture):
     """Test the status command text output filtered by VIN."""
-
     sys.argv = ["bimmerconnected", "status", *ARGS_USER_PW_REGION]
     bimmer_connected.cli.main()
     result = capsys.readouterr()
@@ -115,11 +111,9 @@ def test_status_unfiltered(capsys: pytest.CaptureFixture):
     assert result.out.count("VIN: ") == get_fingerprint_count("states")
 
 
-@pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.usefixtures("bmw_log_all_responses")
 def test_fingerprint(capsys: pytest.CaptureFixture, cli_home_dir: Path):
     """Test the fingerprint command."""
-
     sys.argv = ["bimmerconnected", "fingerprint", *ARGS_USER_PW_REGION]
     bimmer_connected.cli.main()
     result = capsys.readouterr()
@@ -142,7 +136,6 @@ def test_fingerprint(capsys: pytest.CaptureFixture, cli_home_dir: Path):
 @pytest.mark.usefixtures("cli_home_dir")
 def test_oauth_store_credentials(cli_home_dir: Path, bmw_fixture: respx.Router):
     """Test storing the oauth credentials."""
-
     assert (cli_home_dir / ".bimmer_connected.json").exists() is False
 
     sys.argv = ["bimmerconnected", "status", *ARGS_USER_PW_REGION]
@@ -157,11 +150,9 @@ def test_oauth_store_credentials(cli_home_dir: Path, bmw_fixture: respx.Router):
     assert set(oauth_storage.keys()) == {"access_token", "refresh_token", "gcid"}
 
 
-# @pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.usefixtures("cli_home_dir")
 def test_oauth_load_credentials(cli_home_dir: Path, bmw_fixture: respx.Router):
     """Test loading and storing the oauth credentials."""
-
     demo_oauth_data = {
         "access_token": "demo_access_token",
         "refresh_token": "demo_refresh_token",
@@ -189,7 +180,6 @@ def test_oauth_load_credentials(cli_home_dir: Path, bmw_fixture: respx.Router):
     assert oauth_storage["gcid"] == demo_oauth_data["gcid"]
 
 
-@pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.usefixtures("cli_home_dir")
 @pytest.mark.parametrize(
     ("filepath"),
@@ -200,7 +190,6 @@ def test_oauth_load_credentials(cli_home_dir: Path, bmw_fixture: respx.Router):
 )
 def test_oauth_store_credentials_path(cli_home_dir: Path, tmp_path_factory: pytest.TempPathFactory, filepath: str):
     """Test storing the oauth credentials to another file."""
-
     new_folder = tmp_path_factory.mktemp("specific-path-")
 
     assert (cli_home_dir / ".bimmer_connected.json").exists() is False
@@ -223,11 +212,9 @@ def test_oauth_store_credentials_path(cli_home_dir: Path, tmp_path_factory: pyte
     assert set(oauth_storage.keys()) == {"access_token", "refresh_token", "gcid"}
 
 
-@pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.usefixtures("cli_home_dir")
 def test_oauth_store_credentials_disabled(cli_home_dir: Path):
     """Test NOT storing the oauth credentials."""
-
     assert (cli_home_dir / ".bimmer_connected.json").exists() is False
 
     sys.argv = ["bimmerconnected", "--disable-oauth-store", "status", *ARGS_USER_PW_REGION]
@@ -239,7 +226,6 @@ def test_oauth_store_credentials_disabled(cli_home_dir: Path):
 @pytest.mark.usefixtures("cli_home_dir")
 def test_login_refresh_token(cli_home_dir: Path, bmw_fixture: respx.Router):
     """Test logging in with refresh token."""
-
     # set up stored tokens
     demo_oauth_data = {
         "access_token": "outdated_access_token",
@@ -271,7 +257,6 @@ def test_login_refresh_token(cli_home_dir: Path, bmw_fixture: respx.Router):
 @pytest.mark.usefixtures("cli_home_dir")
 def test_login_invalid_refresh_token(cli_home_dir: Path, bmw_fixture: respx.Router):
     """Test logging in with an invalid refresh token."""
-
     # set up stored tokens
     demo_oauth_data = {
         "refresh_token": "invalid_refresh_token",

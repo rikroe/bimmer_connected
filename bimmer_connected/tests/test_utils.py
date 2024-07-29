@@ -9,7 +9,6 @@ except ImportError:
     from backports import zoneinfo  # type: ignore[import, no-redef]
 
 import pytest
-import respx
 
 from bimmer_connected.api.utils import get_capture_position
 from bimmer_connected.models import ChargingSettings, ValueWithUnit
@@ -19,8 +18,7 @@ from . import RESPONSE_DIR, VIN_G26, load_response
 from .conftest import prepare_account_with_vehicles
 
 
-@pytest.mark.asyncio
-async def test_drive_train(bmw_fixture: respx.Router):
+async def test_drive_train():
     """Tests available attribute."""
     vehicle = (await prepare_account_with_vehicles()).get_vehicle(VIN_G26)
     assert get_class_property_names(vehicle) == [
@@ -54,9 +52,8 @@ async def test_drive_train(bmw_fixture: respx.Router):
     ]
 
 
-def test_parse_datetime(caplog):
+def test_parse_datetime(caplog: pytest.LogCaptureFixture):
     """Test datetime parser."""
-
     dt_without_milliseconds = datetime.datetime(2021, 11, 12, 13, 14, 15, tzinfo=datetime.timezone.utc)
 
     assert dt_without_milliseconds == parse_datetime("2021-11-12T13:14:15.567Z")
@@ -97,7 +94,6 @@ def test_json_encoder():
 
 def test_charging_settings():
     """Test parsing and validation of charging settings."""
-
     cs = ChargingSettings(chargingTarget=90, acLimitValue=32)
     assert cs.acLimitValue == 32
     assert cs.chargingTarget == 90

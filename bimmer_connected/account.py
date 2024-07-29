@@ -52,7 +52,6 @@ class MyBMWAccount:
 
     def __post_init__(self, password, log_responses, observer_position, use_metric_units):
         """Initialize the account."""
-
         if use_metric_units is not None:
             _LOGGER.warning(
                 "The use_metric_units parameter is deprecated and will be removed in a future release. "
@@ -93,7 +92,7 @@ class MyBMWAccount:
 
                     vehicle_base = dict(
                         {ATTR_ATTRIBUTES: {k: v for k, v in vehicle_profile.items() if k != "vin"}},
-                        **{"vin": vehicle_profile["vin"]},
+                        vin=vehicle_profile["vin"],
                     )
 
                     await self.add_vehicle(vehicle_base, fetched_at)
@@ -110,20 +109,20 @@ class MyBMWAccount:
             # Get the detailed vehicle state
             try:
                 await vehicle.get_vehicle_state()
-            except (MyBMWAPIError, json.JSONDecodeError) as ex:
+            except (MyBMWAPIError, json.JSONDecodeError) as ex:  # noqa: PERF203
                 # We don't want to fail completely if one vehicle fails, but we want to know about it
                 error_count += 1
 
                 # If it's a MyBMWQuotaError or MyBMWAuthError, we want to raise it
                 if isinstance(ex, (MyBMWQuotaError, MyBMWAuthError)):
-                    raise ex
+                    raise
 
                 # Always log the error
                 _LOGGER.error("Unable to get details for vehicle %s - (%s) %s", vehicle.vin, type(ex).__name__, ex)
 
                 # If all vehicles fail, we want to raise an exception
                 if error_count == len(self.vehicles):
-                    raise ex
+                    raise
 
     async def add_vehicle(
         self,
@@ -131,7 +130,6 @@ class MyBMWAccount:
         fetched_at: Optional[datetime.datetime] = None,
     ) -> None:
         """Add or update a vehicle from the API responses."""
-
         existing_vehicle = self.get_vehicle(vehicle_base["vin"])
 
         # If vehicle already exists, just update it's state

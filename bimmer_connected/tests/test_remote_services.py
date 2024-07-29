@@ -65,11 +65,9 @@ ALL_SERVICES = {
 }
 
 
-@pytest.mark.asyncio
 @pytest.mark.filterwarnings("ignore:coroutine 'AsyncMockMixin._execute_mock_call' was never awaited:RuntimeWarning")
-async def test_trigger_remote_services(bmw_fixture: respx.Router):
+async def test_trigger_remote_services():
     """Test executing a remote light flash."""
-
     account = await prepare_account_with_vehicles()
     vehicle = account.get_vehicle(VIN_I20)
 
@@ -90,10 +88,8 @@ async def test_trigger_remote_services(bmw_fixture: respx.Router):
                 mock_listener.assert_not_called()
 
 
-@pytest.mark.asyncio
 async def test_get_remote_service_status(bmw_fixture: respx.Router):
     """Test get_remove_service_status method."""
-
     account = await prepare_account_with_vehicles()
     vehicle = account.get_vehicle(VIN_G26)
     client = MyBMWClient(account.config)
@@ -114,10 +110,8 @@ async def test_get_remote_service_status(bmw_fixture: respx.Router):
         await vehicle.remote_services._block_until_done(client, uuid4())
 
 
-@pytest.mark.asyncio
-async def test_set_lock_result(bmw_fixture: respx.Router):
+async def test_set_lock_result():
     """Test locking/unlocking a car."""
-
     account = await prepare_account_with_vehicles()
 
     vehicle = account.get_vehicle(VIN_I01_NOREX)
@@ -131,10 +125,8 @@ async def test_set_lock_result(bmw_fixture: respx.Router):
     assert vehicle.doors_and_windows.door_lock_state == LockState.UNLOCKED
 
 
-@pytest.mark.asyncio
-async def test_set_climate_result(bmw_fixture: respx.Router):
+async def test_set_climate_result():
     """Test starting/stopping climatization."""
-
     account = await prepare_account_with_vehicles()
 
     vehicle = account.get_vehicle(VIN_G01)
@@ -148,10 +140,8 @@ async def test_set_climate_result(bmw_fixture: respx.Router):
     assert vehicle.climate.activity == ClimateActivityState.STANDBY
 
 
-@pytest.mark.asyncio
-async def test_charging_start_stop(bmw_fixture: respx.Router):
+async def test_charging_start_stop():
     """Test starting/stopping climatization."""
-
     account = await prepare_account_with_vehicles()
 
     vehicle = account.get_vehicle(VIN_I20)
@@ -166,10 +156,8 @@ async def test_charging_start_stop(bmw_fixture: respx.Router):
     assert vehicle.fuel_and_battery.charging_status == ChargingState.CHARGING
 
 
-@pytest.mark.asyncio
-async def test_set_charging_settings(bmw_fixture: respx.Router):
+async def test_set_charging_settings():
     """Test setting the charging settings on a car."""
-
     account = await prepare_account_with_vehicles()
 
     # Errors on old electric vehicles, combustion engines and PHEV
@@ -206,10 +194,8 @@ async def test_set_charging_settings(bmw_fixture: respx.Router):
         await vehicle.remote_services.trigger_charging_settings_update(ac_limit="asdf")
 
 
-@pytest.mark.asyncio
 async def test_set_charging_profile(bmw_fixture: respx.Router, monkeypatch: pytest.MonkeyPatch):
     """Test setting the charging profile on a car."""
-
     account = await prepare_account_with_vehicles()
 
     # Errors on combustion engines
@@ -244,10 +230,8 @@ async def test_set_charging_profile(bmw_fixture: respx.Router, monkeypatch: pyte
     assert vehicle.charging_profile.charging_mode == ChargingMode.IMMEDIATE_CHARGING
 
 
-@pytest.mark.asyncio
-async def test_vehicles_without_enabled_services(bmw_fixture: respx.Router):
+async def test_vehicles_without_enabled_services():
     """Test setting the charging profile on a car."""
-
     account = await prepare_account_with_vehicles()
 
     # Errors on combustion engines
@@ -262,10 +246,8 @@ async def test_vehicles_without_enabled_services(bmw_fixture: respx.Router):
             )
 
 
-@pytest.mark.asyncio
-async def test_trigger_charge_start_stop_warnings(caplog, bmw_fixture: respx.Router):
+async def test_trigger_charge_start_stop_warnings(caplog: pytest.LogCaptureFixture, bmw_fixture: respx.Router):
     """Test if warnings are produced correctly with the charge start/stop services."""
-
     account = await prepare_account_with_vehicles()
     vehicle = account.get_vehicle(VIN_I20)
 
@@ -299,10 +281,8 @@ async def test_trigger_charge_start_stop_warnings(caplog, bmw_fixture: respx.Rou
     caplog.clear()
 
 
-@pytest.mark.asyncio
-async def test_get_remote_position(bmw_fixture: respx.Router):
+async def test_get_remote_position():
     """Test getting position from remote service."""
-
     account = await prepare_account_with_vehicles()
     account.set_observer_position(1.0, 0.0)
     vehicle = account.get_vehicle(VIN_G26)
@@ -323,10 +303,8 @@ async def test_get_remote_position(bmw_fixture: respx.Router):
     assert location.heading == 121
 
 
-@pytest.mark.asyncio
-async def test_get_remote_position_fail_without_observer(caplog, bmw_fixture: respx.Router):
+async def test_get_remote_position_fail_without_observer(caplog: pytest.LogCaptureFixture, bmw_fixture: respx.Router):
     """Test getting position from remote service."""
-
     account = await prepare_account_with_vehicles()
     vehicle = account.get_vehicle(VIN_G26)
 
@@ -340,8 +318,7 @@ async def test_get_remote_position_fail_without_observer(caplog, bmw_fixture: re
     assert len(errors) == 1
 
 
-@pytest.mark.asyncio
-async def test_fail_with_timeout(bmw_fixture: respx.Router):
+async def test_fail_with_timeout():
     """Test failing after timeout was reached."""
     remote_services._POLLING_CYCLE = 1
     remote_services._POLLING_TIMEOUT = 2
@@ -354,10 +331,8 @@ async def test_fail_with_timeout(bmw_fixture: respx.Router):
 
 
 @time_machine.travel("2020-01-01", tick=False)
-@pytest.mark.asyncio
-async def test_get_remote_position_too_old(bmw_fixture: respx.Router):
+async def test_get_remote_position_too_old():
     """Test remote service position being ignored as vehicle status is newer."""
-
     account = await prepare_account_with_vehicles()
     vehicle = account.get_vehicle(VIN_G26)
     location = vehicle.vehicle_location
@@ -368,10 +343,8 @@ async def test_get_remote_position_too_old(bmw_fixture: respx.Router):
     assert location.heading == 180
 
 
-@pytest.mark.asyncio
-async def test_poi(bmw_fixture: respx.Router):
+async def test_poi():
     """Test get_remove_service_status method."""
-
     account = await prepare_account_with_vehicles()
     vehicle = account.get_vehicle(VIN_G26)
 
@@ -383,7 +356,6 @@ async def test_poi(bmw_fixture: respx.Router):
 
 def test_poi_parsing():
     """Test correct parsing of PointOfInterest."""
-
     # Check parsing of attributes required by API
     poi_data = PointOfInterest(**POI_DATA)
     assert poi_data.position["lat"] == POI_DATA["lat"]

@@ -28,7 +28,6 @@ class MyBMWClientConfiguration:
 
     def set_log_responses(self, log_responses: bool) -> None:
         """Set if responses are logged and clear response store."""
-
         self.log_responses = log_responses
         RESPONSE_STORE.clear()
 
@@ -37,6 +36,7 @@ class MyBMWClient(httpx.AsyncClient):
     """Async HTTP client based on `httpx.AsyncClient` with automated OAuth token refresh."""
 
     def __init__(self, config: MyBMWClientConfiguration, *args, brand: Optional[CarBrands] = None, **kwargs):
+        """Initialize the client with the given configuration."""
         self.config = config
 
         # Add authentication

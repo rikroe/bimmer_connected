@@ -6,18 +6,10 @@ import json
 import logging
 import pathlib
 from enum import Enum
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from bimmer_connected.models import AnonymizedResponse
 
-if TYPE_CHECKING:
-    from typing import TypeVar
-
-    from typing_extensions import ParamSpec
-
-    _T = TypeVar("_T")
-    _R = TypeVar("_R")
-    _P = ParamSpec("_P")
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -37,9 +29,8 @@ def parse_datetime(date_str: str) -> Optional[datetime.datetime]:
     for date_format in date_formats:
         try:
             parsed = datetime.datetime.strptime(date_str, date_format)
-            parsed = parsed.replace(microsecond=0)
-            return parsed
-        except ValueError:
+            return parsed.replace(microsecond=0)
+        except ValueError:  # noqa: PERF203
             pass
     _LOGGER.error("unable to parse '%s' using %s", date_str, date_formats)
     return None
@@ -47,12 +38,10 @@ def parse_datetime(date_str: str) -> Optional[datetime.datetime]:
 
 def get_next_occurrence(now: datetime.datetime, time: datetime.time) -> datetime.datetime:
     """Get the next occurrence of a given time."""
-
     # If current time is past the given time, add one day to the current date
     # Otherwise use the current date
     next_date = now.date() + datetime.timedelta(days=1) if now.time() > time else now.date()
-    next_occurrence = datetime.datetime.combine(next_date, time)
-    return next_occurrence
+    return datetime.datetime.combine(next_date, time)
 
 
 class MyBMWJSONEncoder(json.JSONEncoder):
@@ -70,7 +59,6 @@ class MyBMWJSONEncoder(json.JSONEncoder):
 
 def to_camel_case(input_str: str) -> str:
     """Convert SNAKE_CASE or snake_case to camelCase."""
-
     retval = ""
     flag_upper = False
     for curr in input_str.lower():
@@ -85,7 +73,6 @@ def to_camel_case(input_str: str) -> str:
 
 def log_response_store_to_file(response_store: List[AnonymizedResponse], logfile_path: pathlib.Path) -> None:
     """Log all responses to files."""
-
     for response in response_store:
         output_path = logfile_path / response.filename
         content = response.content

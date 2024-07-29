@@ -21,7 +21,7 @@ from . import (
 from .common import MyBMWMockRouter
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def bmw_fixture(request: pytest.FixtureRequest) -> Generator[respx.MockRouter, None, None]:
     """Patch MyBMW login API calls."""
     # Now we can start patching the API calls
@@ -36,7 +36,7 @@ def bmw_fixture(request: pytest.FixtureRequest) -> Generator[respx.MockRouter, N
         yield router
 
 
-@pytest.fixture
+@pytest.fixture()
 def bmw_log_all_responses(monkeypatch: pytest.MonkeyPatch):
     """Increase the length of the response store to log all responses."""
     temp_store: Deque[AnonymizedResponse] = deque(maxlen=100)
@@ -44,7 +44,7 @@ def bmw_log_all_responses(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr("bimmer_connected.account.RESPONSE_STORE", temp_store)
 
 
-@pytest.fixture
+@pytest.fixture()
 def cli_home_dir(tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch):
     """Create a temporary home directory for the CLI tests."""
     tmp_path = tmp_path_factory.mktemp("cli-home-")
